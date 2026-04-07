@@ -17,10 +17,11 @@ base_font = pygame.font.Font(None, 32)
 words = read_words(20)
 words_text = []
 
-# TO DO: highlight current word
-# TO DO: user text input
-# TO DO: only show 4 lines at a time
-# TO DO: move lines up (read in next line of words) when finished
+# display words to be typed
+#   TO DO: highlight current word
+#   TO DO: user text input
+#   TO DO: only show 4 lines at a time
+#   TO DO: move lines up (read in next line of words) when finished
 width = 100
 height = 150
 for word in words:
@@ -32,6 +33,10 @@ for word in words:
     words_text.append(Word(word, base_font, width, height, size, screen))
     width += size[0] + 30
 
+# text box for user input
+text_box = pygame.Rect(100, 400, 600, 80)
+user_text = ""
+
 running = True
 while running:
     screen.fill((255, 255, 255))
@@ -39,8 +44,24 @@ while running:
     for w in words_text:
         w.display()
 
+    # display text box
+    pygame.draw.rect(screen, (210, 210, 210), text_box)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:         # when user presses space, move onto next word
+                user_text = ""
+
+            if event.key == pygame.K_BACKSPACE:
+                user_text = user_text[:-1]
+            else:
+                if event.unicode.isalpha():
+                    user_text += event.unicode
+
+    text_surface = base_font.render(user_text, True, (0, 0, 0))
+    screen.blit(text_surface, (120, 425))
 
     pygame.display.update()
