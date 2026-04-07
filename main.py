@@ -39,8 +39,11 @@ user_text = ""
 
 current_word = 0        # index of current word user is to type
 
+# GAME LOOP
 running = True
 while running:
+    target = words[current_word]
+
     screen.fill((255, 255, 255))
 
     for i in range(len(words_text)):
@@ -58,8 +61,13 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:         # when user presses space, move onto next word
+                w = words_text[current_word]
+                if user_text == target:
+                    w.finished(True)
+                else:
+                    w.finished(False)
                 user_text = ""
-                words_text[current_word].unhighlight()
+                w.unhighlight()
                 current_word += 1
 
             if event.key == pygame.K_BACKSPACE:
@@ -68,6 +76,15 @@ while running:
             else:
                 if event.unicode.isalpha():
                     user_text += event.unicode
+
+            # compare current text with word (up til length)
+            # if incorrect, highlight with red
+            if user_text != target[0:len(user_text)]:
+                print(user_text, "ISNT EQUAL TO ", target[0:len(user_text)])
+                print("WRONNGGG")
+                words_text[current_word].incorrect()
+            else:
+                words_text[current_word].correct()
 
     text_surface = base_font.render(user_text, True, (0, 0, 0))
     screen.blit(text_surface, (120, 425))

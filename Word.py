@@ -11,7 +11,9 @@ class Word:
         self.x = x
         self.y = y
         self.size = size
+        self.font = font
         self.text = font.render(self.word, True, self.color)
+        self.highlight_color = (190, 190, 190)
 
         self.textRect = pygame.Rect(
             self.x-10, self.y-5, size[0] + 20, size[1] + 10)
@@ -21,7 +23,7 @@ class Word:
 
     def display(self):
         if self.highlighted:
-            pygame.draw.rect(self.screen, (190, 190, 190),
+            pygame.draw.rect(self.screen, (self.highlight_color),
                              self.textRect, border_radius=8)
         self.screen.blit(self.text, (self.x, self.y))
 
@@ -30,3 +32,17 @@ class Word:
 
     def unhighlight(self):
         self.highlighted = False
+
+    def incorrect(self):
+        self.highlight_color = (255, 0, 0)
+
+    def correct(self):
+        self.highlight_color = (190, 190, 190)
+
+    def finished(self, correct):
+        # check if correct or not to determine color
+        if correct:
+            self.color = (59, 156, 50)
+        if not correct:
+            self.color = (255, 0, 0)
+        self.text = self.font.render(self.word, True, self.color)
