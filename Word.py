@@ -13,10 +13,20 @@ class Word:
         self.size = size
         self.text = font.render(self.word, True, self.color)
 
-        self.textRect = self.text.get_rect()
+        self.textRect = pygame.Rect(
+            self.x-10, self.y-5, size[0] + 20, size[1] + 10)
+        # self.textRect.center = (self.x + size[0]//2, self.y + size[1]//2)
 
-        self.textRect.center = (self.x + size[0]//2, self.y + size[1]//2)
+        self.highlighted = False
 
     def display(self):
-        pygame.draw.rect(self.screen, (190, 190, 190), self.textRect)
+        if self.highlighted:
+            pygame.draw.rect(self.screen, (190, 190, 190),
+                             self.textRect, border_radius=8)
         self.screen.blit(self.text, (self.x, self.y))
+
+    def highlight(self):
+        self.highlighted = True
+
+    def unhighlight(self):
+        self.highlighted = False

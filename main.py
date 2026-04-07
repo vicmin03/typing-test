@@ -28,7 +28,7 @@ for word in words:
     size = pygame.font.Font.size(base_font, word)
     # if width exceeds size of screen, put onto next line
     if width > 650:
-        height += 30
+        height += 50
         width = 100
     words_text.append(Word(word, base_font, width, height, size, screen))
     width += size[0] + 30
@@ -37,11 +37,16 @@ for word in words:
 text_box = pygame.Rect(100, 400, 600, 80)
 user_text = ""
 
+current_word = 0        # index of current word user is to type
+
 running = True
 while running:
     screen.fill((255, 255, 255))
 
-    for w in words_text:
+    for i in range(len(words_text)):
+        w = words_text[i]
+        if i == current_word:
+            w.highlight()
         w.display()
 
     # display text box
@@ -54,9 +59,12 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:         # when user presses space, move onto next word
                 user_text = ""
+                words_text[current_word].unhighlight()
+                current_word += 1
 
             if event.key == pygame.K_BACKSPACE:
                 user_text = user_text[:-1]
+
             else:
                 if event.unicode.isalpha():
                     user_text += event.unicode
