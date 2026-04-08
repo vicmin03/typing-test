@@ -111,7 +111,7 @@ while running:
                 user_text = user_text[:-1]
 
             else:
-                if event.unicode.isalpha():
+                if event.unicode.isalpha() or event.unicode == "-":
                     user_text += event.unicode
 
             # compare current text with word (up til length)
