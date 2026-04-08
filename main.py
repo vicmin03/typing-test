@@ -4,7 +4,12 @@ from Word import Word
 
 pygame.init()
 
-screen = pygame.display.set_mode((800, 600))
+
+# define dimensions of window and playable area
+WIDTH, HEIGHT = 800, 600
+START_X, END_X = 50, 550
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 # set title and icon of pygame window
 pygame.display.set_caption("Typing Test")
@@ -14,27 +19,26 @@ pygame.display.set_icon(pygame.image.load("keyboard.png"))
 base_font = pygame.font.Font(None, 32)
 
 # read in words
+# TO DO - increase to 200? and display 3 lines at a time
 words = read_words(20)
 words_text = []
 
 # display words to be typed
-#   TO DO: highlight current word
-#   TO DO: user text input
 #   TO DO: only show 4 lines at a time
 #   TO DO: move lines up (read in next line of words) when finished
-width = 100
-height = 150
+x = START_X
+y = 150
 for word in words:
     size = pygame.font.Font.size(base_font, word)
     # if width exceeds size of screen, put onto next line
-    if width > 650:
-        height += 50
-        width = 100
-    words_text.append(Word(word, base_font, width, height, size, screen))
-    width += size[0] + 30
+    if x + size[0] > 750:
+        y += 50
+        x = START_X
+    words_text.append(Word(word, base_font, x, y, size, screen))
+    x += size[0] + 30
 
 # text box for user input
-text_box = pygame.Rect(100, 400, 600, 80)
+text_box = pygame.Rect(START_X, 500, 700, 60)
 user_text = ""
 
 current_word = 0        # index of current word user is to type
@@ -62,10 +66,7 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:         # when user presses space, move onto next word
                 w = words_text[current_word]
-                if user_text == target:
-                    w.finished(True)
-                else:
-                    w.finished(False)
+                w.finished(user_text == target)     # check if spelt correctly
                 user_text = ""
                 w.unhighlight()
                 current_word += 1
@@ -80,13 +81,11 @@ while running:
             # compare current text with word (up til length)
             # if incorrect, highlight with red
             if user_text != target[0:len(user_text)]:
-                print(user_text, "ISNT EQUAL TO ", target[0:len(user_text)])
-                print("WRONNGGG")
                 words_text[current_word].incorrect()
             else:
                 words_text[current_word].correct()
 
     text_surface = base_font.render(user_text, True, (0, 0, 0))
-    screen.blit(text_surface, (120, 425))
+    screen.blit(text_surface, (START_X + 20, 520))
 
     pygame.display.update()

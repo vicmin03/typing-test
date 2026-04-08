@@ -1,12 +1,10 @@
 import pygame
 
 
-# make rect first then display text on top of rect
 class Word:
     def __init__(self, word, font, x, y, size, screen):
         self.word = word
         self.screen = screen
-        # self.user_input = ""
         self.color = (0, 0, 0)
         self.x = x
         self.y = y
@@ -17,7 +15,6 @@ class Word:
 
         self.textRect = pygame.Rect(
             self.x-10, self.y-5, size[0] + 20, size[1] + 10)
-        # self.textRect.center = (self.x + size[0]//2, self.y + size[1]//2)
 
         self.highlighted = False
 
