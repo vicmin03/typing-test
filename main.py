@@ -78,9 +78,22 @@ lines = fill_lines(first_word, lines)
 # control game flow + timer
 started = False
 TIMEREVENT = pygame.USEREVENT + 1
-# triggers timerevent every 1000ms = 1s
-pygame.time.set_timer(TIMEREVENT, 1000)
-time_left = 10
+
+pygame.time.set_timer(TIMEREVENT, 1000)  # triggers timer event every 1s
+SECONDS = 10
+time_left = SECONDS
+
+
+# vars to calculate wpm and accuracy
+total_keys = 0
+incorrect_keys = 0
+
+
+def calculate_stats(total_keys, incorrect_keys):
+    # print(total_keys, incorrect_keys)
+    wpm = (total_keys / 5) / (SECONDS/60)
+    accuracy = ((total_keys - incorrect_keys) / total_keys) * 100
+    return wpm, accuracy
 
 
 # --- GAME LOOP ---
@@ -109,6 +122,9 @@ while running:
                 time_left -= 1
             else:
                 print("TIMER FINISHED")
+                wpm, accuracy = calculate_stats(total_keys, incorrect_keys)
+                print("WPM: ", wpm, "Accuracy: ", accuracy)
+                running = False
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:         # when user presses space, move onto next word
@@ -129,11 +145,13 @@ while running:
             else:
                 if event.unicode.isalpha() or event.unicode == "-":
                     user_text += event.unicode
+                    total_keys += 1
 
             # compare current text with word (up til length)
             # if incorrect, highlight with red
             if user_text != target[0:len(user_text)]:
                 words_text[current_word].incorrect()
+                incorrect_keys += 1
             else:
                 words_text[current_word].correct()
 
