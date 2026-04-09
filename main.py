@@ -5,7 +5,7 @@ from Word import Word
 pygame.init()
 
 # define dimensions of window and playable area
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 900, 600
 START_X, END_X = 50, 750
 START_Y, END_Y = 150, 400
 NUM_LINES = 3
@@ -16,8 +16,9 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Typing Test")
 pygame.display.set_icon(pygame.image.load("keyboard.png"))
 
-# text font
-base_font = pygame.font.Font(None, 32)
+# text fonts
+base_font = pygame.font.SysFont("Arial", 32)
+timer_font = pygame.font.SysFont("Arial", 60, bold=True)
 
 # read in words
 NUM_WORDS = 50
@@ -35,7 +36,7 @@ for i in range(len(words)):
     word = words[i]
     size = pygame.font.Font.size(base_font, word)
     # if width exceeds size of screen, put onto next line
-    if i == 0 or x + size[0] > 750:
+    if i == 0 or x + size[0] > WIDTH - 50:
         y += 50
         x = START_X
         words_text.append(Word(word, base_font, x,
@@ -66,14 +67,23 @@ def fill_lines(start, lines):
 
 
 # text box for user input
-text_box = pygame.Rect(START_X, 500, 700, 60)
+text_box = pygame.Rect(START_X, 450, WIDTH - 100, 60)
 user_text = ""
 
+# keep track of current words + those to be displayed
 current_word = 0        # index of current word user is to type
 first_word = 0          # index of first word to display
 lines = fill_lines(first_word, lines)
 
-# GAME LOOP
+# control game flow + timer
+started = False
+TIMEREVENT = pygame.USEREVENT + 1
+# triggers timerevent every 1000ms = 1s
+pygame.time.set_timer(TIMEREVENT, 1000)
+time_left = 10
+
+
+# --- GAME LOOP ---
 running = True
 while running:
     target = words[current_word]        # target string for user to type
@@ -93,6 +103,12 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        if event.type == TIMEREVENT:
+            if time_left > 0:
+                time_left -= 1
+            else:
+                print("TIMER FINISHED")
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:         # when user presses space, move onto next word
@@ -121,7 +137,12 @@ while running:
             else:
                 words_text[current_word].correct()
 
+    # displays user input text
     text_surface = base_font.render(user_text, True, (0, 0, 0))
-    screen.blit(text_surface, (START_X + 20, 520))
+    screen.blit(text_surface, (START_X + 20, 460))
+
+    # displays timer
+    timer = timer_font.render(str(time_left), True, (0, 0, 0))
+    screen.blit(timer, ((WIDTH // 2) - 20, 50))
 
     pygame.display.update()
