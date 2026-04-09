@@ -107,22 +107,29 @@ lines = fill_lines(first_word, lines)
 # control game flow + timer
 started = False
 show_intro = True
+finished = False
 TIMEREVENT = pygame.USEREVENT + 1
 
 pygame.time.set_timer(TIMEREVENT, 1000)  # triggers timer event every 1s
-SECONDS = 10
+SECONDS = 60
 time_left = SECONDS
 
 # vars to calculate wpm and accuracy
 total_keys = 0
 incorrect_keys = 0
+results = ""
 
 
 def calculate_stats(total_keys, incorrect_keys):
-    # print(total_keys, incorrect_keys)
     wpm = (total_keys / 5) / (SECONDS/60)
     accuracy = ((total_keys - incorrect_keys) / total_keys) * 100
+    # net_wpm = wpm - uncorrected_errors
     return wpm, accuracy
+
+
+def get_results_text(wpm, accuracy):
+    # return results text as string
+    return f"Your final results are: \nWords per Minute: {round(wpm)} \nAccuracy: {round(accuracy, 2)}%"
 
 
 # --- GAME LOOP ---
@@ -141,8 +148,15 @@ while running:
                 # started = True
                 show_intro = False
 
-    else:
+    elif finished:
+        pygame.draw.rect(screen, (210, 210, 210), intro_box)
+        blit_text(screen, results, (START_X + 20, 170), base_font)
 
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+    else:
         # target string for user to type
         target = words[current_word]
 
@@ -153,8 +167,14 @@ while running:
                     w.highlight()
                 w.display()
 
-        # display text box
+        # displays text box + user input
         pygame.draw.rect(screen, (210, 210, 210), text_box)
+        text_surface = base_font.render(user_text, True, (0, 0, 0))
+        screen.blit(text_surface, (START_X + 20, 460))
+
+        # displays timer
+        timer = timer_font.render(str(time_left), True, (0, 0, 0))
+        screen.blit(timer, ((WIDTH // 2) - 20, 50))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -164,10 +184,10 @@ while running:
                 if time_left > 0:
                     time_left -= 1
                 else:
-                    print("TIMER FINISHED")
+                    finished = True
                     started = False
                     wpm, accuracy = calculate_stats(total_keys, incorrect_keys)
-                    print("WPM: ", wpm, "Accuracy: ", accuracy)
+                    results = get_results_text(wpm, accuracy)
 
             if event.type == pygame.KEYDOWN:
                 if not started and time_left > 0:
@@ -201,13 +221,5 @@ while running:
                         incorrect_keys += 1
                     else:
                         words_text[current_word].correct()
-
-        # displays user input text
-        text_surface = base_font.render(user_text, True, (0, 0, 0))
-        screen.blit(text_surface, (START_X + 20, 460))
-
-        # displays timer
-        timer = timer_font.render(str(time_left), True, (0, 0, 0))
-        screen.blit(timer, ((WIDTH // 2) - 20, 50))
 
     pygame.display.update()
