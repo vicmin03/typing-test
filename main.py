@@ -20,12 +20,41 @@ pygame.display.set_icon(pygame.image.load("keyboard.png"))
 base_font = pygame.font.SysFont("Arial", 32)
 timer_font = pygame.font.SysFont("Arial", 60, bold=True)
 
-# read in words
+
+# intro explanation text
+intro = """How fast can you type?
+Try and type the following words as quickly and accurately as you can in the next 60 seconds.
+
+The timer will only start once you start typing
+Press any key to begin the test"""
+intro_box = pygame.Rect(START_X, 150, WIDTH - 100, 250)
+
+
+def blit_text(screen, text, pos, font, color=pygame.Color('black')):
+    words = [word.split(' ') for word in text.splitlines()]
+    space = font.size(' ')[0]  # The width of a space
+    max_width, max_height = screen.get_size()
+    x, y = pos
+    for line in words:
+        for word in line:
+            word_surface = font.render(word, True, color)
+            word_width, word_height = word_surface.get_size()
+            if x + word_width >= max_width:
+                x = pos[0]  # Reset the x.
+                y += word_height  # Start on new row.
+            screen.blit(word_surface, (x, y))
+            x += word_width + space
+        x = pos[0]  # Reset the x.
+        y += word_height  # Start on new row.
+
+
+# read in words from file
 NUM_WORDS = 50
 words = read_words(NUM_WORDS)
-words_text = []
+words_text = []     # store Word objects
 
 # display words to be typed
+
 # keeps track of 3 lines of words to be displayed
 lines = [[] for _ in range(NUM_LINES)]
 
@@ -77,12 +106,12 @@ lines = fill_lines(first_word, lines)
 
 # control game flow + timer
 started = False
+show_intro = True
 TIMEREVENT = pygame.USEREVENT + 1
 
 pygame.time.set_timer(TIMEREVENT, 1000)  # triggers timer event every 1s
 SECONDS = 10
 time_left = SECONDS
-
 
 # vars to calculate wpm and accuracy
 total_keys = 0
@@ -99,68 +128,86 @@ def calculate_stats(total_keys, incorrect_keys):
 # --- GAME LOOP ---
 running = True
 while running:
-    target = words[current_word]        # target string for user to type
-
     screen.fill((255, 255, 255))
 
-    for line in lines[0:NUM_LINES]:
-        for index in line:
-            w = words_text[index]
-            if index == current_word:
-                w.highlight()
-            w.display()
+    if show_intro:
+        pygame.draw.rect(screen, (210, 210, 210), intro_box)
+        blit_text(screen, intro, (START_X + 20, 170), base_font)
 
-    # display text box
-    pygame.draw.rect(screen, (210, 210, 210), text_box)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                # started = True
+                show_intro = False
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    else:
 
-        if event.type == TIMEREVENT:
-            if time_left > 0:
-                time_left -= 1
-            else:
-                print("TIMER FINISHED")
-                wpm, accuracy = calculate_stats(total_keys, incorrect_keys)
-                print("WPM: ", wpm, "Accuracy: ", accuracy)
+        # target string for user to type
+        target = words[current_word]
+
+        for line in lines[0:NUM_LINES]:
+            for index in line:
+                w = words_text[index]
+                if index == current_word:
+                    w.highlight()
+                w.display()
+
+        # display text box
+        pygame.draw.rect(screen, (210, 210, 210), text_box)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 running = False
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:         # when user presses space, move onto next word
-                # check if reached end of line, then move next line up
-                if current_word == lines[0][-1]:
-                    first_word = current_word + 1
-                    lines = fill_lines(first_word, lines)
+            if started and event.type == TIMEREVENT:
+                if time_left > 0:
+                    time_left -= 1
+                else:
+                    print("TIMER FINISHED")
+                    started = False
+                    wpm, accuracy = calculate_stats(total_keys, incorrect_keys)
+                    print("WPM: ", wpm, "Accuracy: ", accuracy)
 
-                w = words_text[current_word]
-                w.finished(user_text == target)     # check if spelt correctly
-                user_text = ""
-                w.unhighlight()
-                current_word += 1
+            if event.type == pygame.KEYDOWN:
+                if not started and time_left > 0:
+                    started = True
+                if started:
+                    if event.key == pygame.K_SPACE:         # when user presses space, move onto next word
+                        # check if reached end of line, then move next line up
+                        if current_word == lines[0][-1]:
+                            first_word = current_word + 1
+                            lines = fill_lines(first_word, lines)
 
-            if event.key == pygame.K_BACKSPACE:
-                user_text = user_text[:-1]
+                        w = words_text[current_word]
+                        # check if spelt correctly
+                        w.finished(user_text == target)
+                        user_text = ""
+                        w.unhighlight()
+                        current_word += 1
 
-            else:
-                if event.unicode.isalpha() or event.unicode == "-":
-                    user_text += event.unicode
-                    total_keys += 1
+                    if event.key == pygame.K_BACKSPACE:
+                        user_text = user_text[:-1]
 
-            # compare current text with word (up til length)
-            # if incorrect, highlight with red
-            if user_text != target[0:len(user_text)]:
-                words_text[current_word].incorrect()
-                incorrect_keys += 1
-            else:
-                words_text[current_word].correct()
+                    else:
+                        if event.unicode.isalpha() or event.unicode == "-":
+                            user_text += event.unicode
+                            total_keys += 1
 
-    # displays user input text
-    text_surface = base_font.render(user_text, True, (0, 0, 0))
-    screen.blit(text_surface, (START_X + 20, 460))
+                    # compare current text with word (up til length)
+                    # if incorrect, highlight with red
+                    if user_text != target[0:len(user_text)]:
+                        words_text[current_word].incorrect()
+                        incorrect_keys += 1
+                    else:
+                        words_text[current_word].correct()
 
-    # displays timer
-    timer = timer_font.render(str(time_left), True, (0, 0, 0))
-    screen.blit(timer, ((WIDTH // 2) - 20, 50))
+        # displays user input text
+        text_surface = base_font.render(user_text, True, (0, 0, 0))
+        screen.blit(text_surface, (START_X + 20, 460))
+
+        # displays timer
+        timer = timer_font.render(str(time_left), True, (0, 0, 0))
+        screen.blit(timer, ((WIDTH // 2) - 20, 50))
 
     pygame.display.update()
